@@ -7,11 +7,13 @@ class _AssistantPage extends StatefulWidget {
     required this.balance,
     required this.entries,
     required this.budgets,
+    required this.initialPrompt,
   });
 
   final double balance;
   final List<_MoneyEntry> entries;
   final List<_BudgetItem> budgets;
+  final String initialPrompt;
 
   @override
   State<_AssistantPage> createState() => _AssistantPageState();
@@ -27,6 +29,11 @@ class _AssistantPageState extends State<_AssistantPage> {
   void initState() {
     super.initState();
     _messages.add((false, _analyze('overview')));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.initialPrompt.isNotEmpty) {
+        _send(widget.initialPrompt);
+      }
+    });
   }
 
   @override
@@ -133,10 +140,21 @@ class _AssistantPageState extends State<_AssistantPage> {
 
   Future<String> _requestAI(String prompt) async {
     final baseUrl = _aiBackendUrl.replaceFirst(RegExp(r'/+$'), '');
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw StateError('Sign in to use the online AI assistant.');
+    }
+    final idToken = await user.getIdToken();
+    if (idToken == null || idToken.isEmpty) {
+      throw StateError('Your sign-in expired. Please sign in again.');
+    }
     final response = await http
         .post(
           Uri.parse('$baseUrl/chat'),
-          headers: const {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $idToken',
+          },
           body: jsonEncode({
             'message': prompt,
             'history': [
@@ -175,13 +193,13 @@ class _AssistantPageState extends State<_AssistantPage> {
           : await _requestAI(text);
       if (!mounted) return;
       setState(() => _messages.add((false, answer)));
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
-        _messages.add((
-          false,
-          'I could not reach Fireworks. Check the backend URL, server logs, and Fireworks API key, then try again.',
-        ));
+        final message = error is StateError
+            ? error.message
+            : 'I could not reach Gemini. Check the backend URL, server logs, and Gemini API key, then try again.';
+        _messages.add((false, message.toString()));
       });
     } finally {
       if (mounted) setState(() => _isSending = false);

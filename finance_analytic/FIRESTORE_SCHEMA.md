@@ -17,6 +17,7 @@ users/{uid}/transactions/{transactionId}
   iconCode: integer
   colorValue: integer
   note: string
+  createdAt: timestamp
 
 users/{uid}/budgets/{budgetId}
   title: string
@@ -34,10 +35,34 @@ users/{uid}/goals/{goalId}
 ```
 
 `firestore.rules` restricts each user to their own profile and data, validates
-the allowed fields and types, and denies profile deletion. These rules require
-Firebase Authentication; the current app's sign-in form is still a demo and
-must be connected to Firebase Auth before real financial data is stored.
+the allowed fields and types, and permits users to delete their own profile.
+The profile's Delete Account action removes the user's transactions, budgets,
+goals, profile document, Firebase Authentication account, and local PIN. The app uses Firebase
+email/password authentication and stores signed-in users' transactions and
+budgets under their own UID. New transactions and budgets load again on sign-in.
 
-To connect this project, run `flutterfire configure` from the Flutter project,
-create a Cloud Firestore database in the Firebase Console, then deploy the
-rules with `firebase deploy --only firestore:rules`.
+## Firebase setup
+
+Firebase project configuration is not included in this repository. From the
+Flutter project directory, sign in to Firebase, install the FlutterFire CLI,
+and configure the Android and iOS apps:
+
+```powershell
+firebase login
+dart pub global activate flutterfire_cli
+flutterfire configure --platforms android,ios
+firebase use --add
+```
+
+In Firebase Console, enable **Authentication > Email/Password** and create a
+Cloud Firestore database. Then deploy the existing security rules:
+
+```powershell
+firebase deploy --only firestore:rules
+```
+
+For web, pass the Firebase web app values when running/building Flutter using
+`FIREBASE_API_KEY`, `FIREBASE_WEB_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`, and
+`FIREBASE_PROJECT_ID` dart defines. `FIREBASE_AUTH_DOMAIN` and
+`FIREBASE_STORAGE_BUCKET` are optional. The Java backend remains the AI chat
+proxy; budget data is stored directly in Firestore.

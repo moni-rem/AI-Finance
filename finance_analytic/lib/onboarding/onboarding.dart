@@ -12,74 +12,15 @@ class _SplashPage extends StatelessWidget {
       child: Column(
         children: [
           const Spacer(),
-          SizedBox(
-            width: 220,
-            height: 220,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 210,
-                  height: 210,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        _purple.withValues(alpha: 0.30),
-                        _purple.withValues(alpha: 0),
-                      ],
-                    ),
-                  ),
-                ),
-                Transform.rotate(
-                  angle: -0.12,
-                  child: Container(
-                    width: 112,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFB272FF), _purple],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _purple.withValues(alpha: 0.45),
-                          blurRadius: 34,
-                          offset: const Offset(0, 14),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      size: 50,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 28,
-                  bottom: 52,
-                  child: Container(
-                    width: 50,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF392477),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFB38BFF)),
-                    ),
-                    child: const Icon(
-                      Icons.circle,
-                      size: 11,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          Image.asset(
+            'assets/images/finance_tracker_icon.png',
+            width: 250,
+            height: 250,
+            fit: BoxFit.contain,
           ),
           const SizedBox(height: 32),
           Text(
-            'Finance Tracker',
+            'Finora: Finance Tracker',
             style: TextStyle(
               color: _white,
               fontSize: 29,
@@ -93,7 +34,6 @@ class _SplashPage extends StatelessWidget {
             style: TextStyle(color: _muted, fontSize: 14),
           ),
           const Spacer(),
-          const _WaveMark(),
           const SizedBox(height: 28),
           _PrimaryButton(
             key: const Key('splashGetStartedButton'),

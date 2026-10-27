@@ -1,0 +1,85 @@
+{
+  "project_info": {
+    "project_number": "339404393953",
+    "firebase_url": "https://financeai-1f64e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "financeai-1f64e",
+    "storage_bucket": "financeai-1f64e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339404393953:android:e5c63065cdd2e184aa96a0",
+        "android_client_info": {
+          "package_name": "com.example.finance_analytic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "339404393953-hpkhugl61nh5bqjvgtj7kecprkdgcvjg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.finance_analytic",
+            "certificate_hash": "8cd22d33f27ef796355abb35465f342bf3119b9f"
+          }
+        },
+        {
+          "client_id": "339404393953-3o8ohi1lfuhnql7pbp65k5r1fspff43j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG59BnS9rfgg-FfDC37IwWOCF-St5AJZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "339404393953-3o8ohi1lfuhnql7pbp65k5r1fspff43j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339404393953:android:db4e0cc96b1b534eaa96a0",
+        "android_client_info": {
+          "package_name": "com.financeTrack.finora"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "339404393953-sgr7bc9h3sfg0one3v8ddk6dr37i20rl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.financeTrack.finora",
+            "certificate_hash": "8cd22d33f27ef796355abb35465f342bf3119b9f"
+          }
+        },
+        {
+          "client_id": "339404393953-3o8ohi1lfuhnql7pbp65k5r1fspff43j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG59BnS9rfgg-FfDC37IwWOCF-St5AJZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "339404393953-3o8ohi1lfuhnql7pbp65k5r1fspff43j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

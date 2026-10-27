@@ -3,15 +3,21 @@ part of '../app/app.dart';
 class _AuthPage extends StatefulWidget {
   const _AuthPage({
     required this.isSignUp,
+    required this.isAccountGate,
+    required this.onGuest,
+    required this.onContinueWithoutSaving,
     required this.onBack,
     required this.onSwitch,
     required this.onComplete,
   });
 
   final bool isSignUp;
+  final bool isAccountGate;
+  final VoidCallback onGuest;
+  final VoidCallback onContinueWithoutSaving;
   final VoidCallback onBack;
   final VoidCallback onSwitch;
-  final VoidCallback onComplete;
+  final Future<void> Function() onComplete;
 
   @override
   State<_AuthPage> createState() => _AuthPageState();
@@ -26,6 +32,8 @@ class _AuthPageState extends State<_AuthPage> {
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
   bool _agreeToTerms = false;
+  bool _isSubmitting = false;
+  String? _authError;
 
   @override
   void dispose() {
@@ -36,7 +44,7 @@ class _AuthPageState extends State<_AuthPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (widget.isSignUp && !_agreeToTerms) {
       _showToast(
@@ -45,7 +53,110 @@ class _AuthPageState extends State<_AuthPage> {
       );
       return;
     }
-    widget.onComplete();
+    setState(() {
+      _isSubmitting = true;
+      _authError = null;
+    });
+    try {
+      final auth = FirebaseAuth.instance;
+      if (widget.isSignUp) {
+        final credential = await auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+        await credential.user?.updateDisplayName(_nameController.text.trim());
+      } else {
+        await auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
+      await widget.onComplete();
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _authError = switch (error.code) {
+          'email-already-in-use' => 'An account already uses this email.',
+          'invalid-email' => 'Enter a valid email address.',
+          'user-not-found' ||
+          'wrong-password' ||
+          'invalid-credential' => 'Email or password is incorrect.',
+          'weak-password' => 'Choose a stronger password.',
+          'network-request-failed' =>
+            'Check your internet connection and retry.',
+          _ => error.message ?? 'Could not authenticate. Please try again.',
+        },
+      );
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _authError = error.code == 'no-app'
+            ? 'Firebase is not configured for this app yet.'
+            : error.message ?? 'Firebase could not complete this request.',
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _authError = 'Could not sign in: $error');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    if (_isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _authError = null;
+    });
+    try {
+      if (Firebase.apps.isEmpty) {
+        throw StateError(
+          'Firebase initialization failed: '
+          '${firebaseInitializationError ?? 'no default Firebase app was created'}',
+        );
+      }
+      final auth = FirebaseAuth.instance;
+      if (foundation.kIsWeb) {
+        await auth.signInWithPopup(GoogleAuthProvider());
+      } else {
+        _googleSignInInitialization ??= GoogleSignIn.instance.initialize();
+        await _googleSignInInitialization;
+        final googleUser = await GoogleSignIn.instance.authenticate();
+        final googleAuth = googleUser.authentication;
+        if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
+          throw StateError(
+            'Google did not return an ID token. Check the Web OAuth client in google-services.json and the Android SHA-1 in Firebase.',
+          );
+        }
+        final credential = GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+        );
+        await auth.signInWithCredential(credential);
+      }
+      await widget.onComplete();
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _authError = switch (error.code) {
+          'no-app' => 'Firebase is not configured for this app yet.',
+          'operation-not-allowed' =>
+            'Enable Google as a sign-in provider in Firebase Authentication.',
+          'app-not-authorized' =>
+            'Add this Android app’s signing SHA-1 fingerprint in Firebase Project Settings.',
+          _ => error.message ?? 'Google sign-in could not be completed.',
+        },
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final details = error.toString();
+      if (details.toLowerCase().contains('cancel')) return;
+      setState(
+        () => _authError =
+            'Google sign-in failed. Enable Google in Firebase Authentication and add this Android app’s SHA-1 fingerprint. Details: $details',
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -63,7 +174,25 @@ class _AuthPageState extends State<_AuthPage> {
           ),
         ),
         const SizedBox(height: 2),
-        if (!isSignUp) ...[
+        if (widget.isAccountGate) ...[
+          Text(
+            isSignUp ? 'Create an account to save' : 'Sign in to save',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _white,
+              fontSize: 25,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            'Your change is ready. Sign in or register to save it.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: _muted, fontSize: 13),
+          ),
+          const SizedBox(height: 22),
+        ] else if (!isSignUp) ...[
           const _AuthWelcomeCard(),
           const SizedBox(height: 22),
         ] else ...[
@@ -179,6 +308,14 @@ class _AuthPageState extends State<_AuthPage> {
             ],
           ),
         ),
+        if (_authError != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _authError!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: _red, fontSize: 12),
+          ),
+        ],
         if (isSignUp) ...[
           const SizedBox(height: 10),
           Row(
@@ -203,7 +340,11 @@ class _AuthPageState extends State<_AuthPage> {
                       style: TextStyle(color: _muted, fontSize: 12),
                     ),
                     GestureDetector(
-                      onTap: () => _showToast(context, 'Terms of Service'),
+                      onTap: () => showLegalDocument(
+                        context,
+                        title: 'Terms of Service',
+                        content: termsOfServiceText,
+                      ),
                       child: Text(
                         'Terms of Service',
                         style: TextStyle(
@@ -218,7 +359,11 @@ class _AuthPageState extends State<_AuthPage> {
                       style: TextStyle(color: _muted, fontSize: 12),
                     ),
                     GestureDetector(
-                      onTap: () => _showToast(context, 'Privacy Policy'),
+                      onTap: () => showLegalDocument(
+                        context,
+                        title: 'Privacy Policy',
+                        content: privacyPolicyText,
+                      ),
                       child: Text(
                         'Privacy Policy',
                         style: TextStyle(
@@ -250,7 +395,7 @@ class _AuthPageState extends State<_AuthPage> {
           height: 56,
           child: FilledButton(
             key: const Key('authSubmitButton'),
-            onPressed: _submit,
+            onPressed: _isSubmitting ? null : _submit,
             style: FilledButton.styleFrom(
               backgroundColor: _purple,
               foregroundColor: Colors.white,
@@ -261,13 +406,23 @@ class _AuthPageState extends State<_AuthPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  isSignUp ? 'Create Account' : 'Sign In',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                if (_isSubmitting)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                else
+                  Text(
+                    isSignUp ? 'Create Account' : 'Sign In',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
                 const SizedBox(width: 10),
                 const Icon(Icons.arrow_forward_rounded, size: 20),
               ],
@@ -286,18 +441,42 @@ class _AuthPageState extends State<_AuthPage> {
           ],
         ),
         const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            _AuthSocialButton(
-              label: 'Google',
-              icon: Icons.g_mobiledata_rounded,
+        Center(
+          child: _AuthSocialButton(
+            label: 'Google',
+            icon: Icons.g_mobiledata_rounded,
+            isLoading: _isSubmitting,
+            onPressed: _isSubmitting ? null : _signInWithGoogle,
+          ),
+        ),
+        const SizedBox(height: 14),
+        OutlinedButton.icon(
+          key: const Key('continueAsGuestButton'),
+          onPressed: widget.isAccountGate
+              ? widget.onContinueWithoutSaving
+              : widget.onGuest,
+          icon: const Icon(Icons.person_outline_rounded),
+          label: Text(
+            widget.isAccountGate
+                ? 'Continue without saving'
+                : 'Continue as Guest',
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _white,
+            minimumSize: const Size(double.infinity, 52),
+            side: BorderSide(color: _purple.withValues(alpha: 0.28)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            SizedBox(width: 12),
-            _AuthSocialButton(label: 'Apple', icon: Icons.apple_rounded),
-            SizedBox(width: 12),
-            _AuthSocialButton(label: 'Facebook', icon: Icons.facebook_rounded),
-          ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          widget.isAccountGate
+              ? 'You can keep using the app as a guest. This change will not be saved.'
+              : 'You can explore the app first. An account is required to save changes.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: _muted, fontSize: 11),
         ),
         const SizedBox(height: 18),
         Wrap(
@@ -321,7 +500,7 @@ class _AuthPageState extends State<_AuthPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Demo: use any valid email and a 6+ character password.',
+          'Sign in to save budgets to your account.',
           textAlign: TextAlign.center,
           style: TextStyle(color: _muted, fontSize: 10),
         ),
@@ -438,16 +617,23 @@ class _AuthWelcomeCard extends StatelessWidget {
 }
 
 class _AuthSocialButton extends StatelessWidget {
-  const _AuthSocialButton({required this.label, required this.icon});
+  const _AuthSocialButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    required this.isLoading,
+  });
 
   final String label;
   final IconData icon;
+  final VoidCallback? onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) => Tooltip(
-    message: '$label sign-in is a demo action',
+    message: 'Continue with $label',
     child: OutlinedButton(
-      onPressed: () => _showToast(context, '$label sign-in is a demo action.'),
+      onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         foregroundColor: _white,
         backgroundColor: _activeDarkMode
@@ -458,7 +644,13 @@ class _AuthSocialButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 17),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17)),
       ),
-      child: Icon(icon, size: 25),
+      child: isLoading
+          ? SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2, color: _purple),
+            )
+          : Icon(icon, size: 25),
     ),
   );
 }

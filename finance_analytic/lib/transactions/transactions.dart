@@ -214,14 +214,20 @@ class _AddTransactionDialogState extends State<_AddTransactionDialog> {
   final _noteController = TextEditingController();
   String _type = 'Expense';
   String _category = 'Food';
+  bool _showAllCategories = false;
 
-  static const _categories = [
+  static const _featuredCategories = [
     'Food',
     'Transport',
     'Shopping',
+    'Housing',
+    'Health',
+    'Other',
+  ];
+  static const _categories = [
+    ..._featuredCategories,
     'Bills',
     'Entertainment',
-    'Other',
   ];
 
   @override
@@ -318,21 +324,45 @@ class _AddTransactionDialogState extends State<_AddTransactionDialog> {
                 ),
                 if (_type == 'Expense') ...[
                   const SizedBox(height: 13),
-                  const _FieldLabel('Category'),
-                  DropdownButtonFormField<String>(
-                    initialValue: _category,
-                    dropdownColor: _panel2,
-                    decoration: const InputDecoration(),
-                    items: [
-                      for (final category in _categories)
-                        DropdownMenuItem(
-                          value: category,
-                          child: Text(category),
+                  Row(
+                    children: [
+                      const Expanded(child: _FieldLabel('Category')),
+                      TextButton.icon(
+                        onPressed: () => setState(
+                          () => _showAllCategories = !_showAllCategories,
+                        ),
+                        icon: Icon(
+                          _showAllCategories
+                              ? Icons.expand_less_rounded
+                              : Icons.chevron_right_rounded,
+                          size: 18,
+                        ),
+                        label: Text(_showAllCategories ? 'Show less' : 'View all'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: _muted,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  GridView.count(
+                    crossAxisCount: 3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1.08,
+                    children: [
+                      for (final category in _showAllCategories
+                          ? _categories
+                          : _featuredCategories)
+                        _TransactionCategoryTile(
+                          category: category,
+                          selected: category == _category,
+                          onTap: () => setState(() => _category = category),
                         ),
                     ],
-                    onChanged: (value) {
-                      if (value != null) setState(() => _category = value);
-                    },
                   ),
                 ],
                 const SizedBox(height: 13),
@@ -357,6 +387,67 @@ class _AddTransactionDialogState extends State<_AddTransactionDialog> {
           child: const Text('Save'),
         ),
       ],
+    );
+  }
+}
+
+class _TransactionCategoryTile extends StatelessWidget {
+  const _TransactionCategoryTile({
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final color = _categoryColor(category);
+    return Material(
+      color: selected
+          ? color.withValues(alpha: dark ? 0.22 : 0.1)
+          : (dark ? _panel2 : const Color(0xFFF7F7FA)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(17),
+        side: BorderSide(
+          color: selected
+              ? color
+              : (dark ? _line : const Color(0xFFE4E5EC)),
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(17),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: dark ? 0.2 : 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(_categoryIcon(category), color: color, size: 21),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              category,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: _white,
+                fontSize: 11,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -388,22 +479,22 @@ class _TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIncome = entry.amount >= 0;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final tint = entry.color.withValues(alpha: dark ? 0.14 : 0.055);
+    final tint = entry.color.withValues(alpha: dark ? 0.18 : 0.075);
     final amountColor = isIncome ? const Color(0xFF00A98F) : _red;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
         color: dark ? _panel : Color.alphaBlend(tint, Colors.white),
-        borderRadius: BorderRadius.circular(23),
+        borderRadius: BorderRadius.circular(21),
         border: Border.all(
-          color: dark ? _line : entry.color.withValues(alpha: 0.09),
+          color: dark ? _line : entry.color.withValues(alpha: 0.16),
         ),
         boxShadow: [
           if (!dark)
             BoxShadow(
-              color: entry.color.withValues(alpha: 0.055),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
+              color: entry.color.withValues(alpha: 0.075),
+              blurRadius: 17,
+              offset: const Offset(0, 6),
             ),
         ],
       ),

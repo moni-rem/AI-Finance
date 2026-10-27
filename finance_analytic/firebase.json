@@ -1,5 +1,1 @@
-{
-  "firestore": {
-    "rules": "firestore.rules"
-  }
-}
+{"firestore":{"rules":"firestore.rules"},"flutter":{"platforms":{"android":{"default":{"projectId":"financeai-1f64e","appId":"1:339404393953:android:e5c63065cdd2e184aa96a0","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"financeai-1f64e","configurations":{"android":"1:339404393953:android:e5c63065cdd2e184aa96a0"}}}}}}

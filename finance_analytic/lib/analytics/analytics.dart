@@ -467,15 +467,15 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: dark
             ? _panel
-            : Color.alphaBlend(color.withValues(alpha: 0.075), Colors.white),
+            : Color.alphaBlend(color.withValues(alpha: 0.09), const Color(0xFFFFFEFC)),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: dark ? 0.3 : 0.2)),
+        border: Border.all(color: color.withValues(alpha: dark ? 0.34 : 0.22)),
         boxShadow: [
           if (!dark)
             BoxShadow(
-              color: color.withValues(alpha: 0.07),
-              blurRadius: 16,
-              offset: const Offset(0, 5),
+              color: color.withValues(alpha: 0.085),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
         ],
       ),

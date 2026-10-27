@@ -4,11 +4,13 @@ class _BudgetPage extends StatelessWidget {
   const _BudgetPage({
     required this.budgets,
     required this.onAddBudget,
+    required this.onDeleteBudget,
     required this.onOpenGoals,
   });
 
   final List<_BudgetItem> budgets;
   final VoidCallback onAddBudget;
+  final Future<void> Function(_BudgetItem) onDeleteBudget;
   final VoidCallback onOpenGoals;
 
   @override
@@ -187,7 +189,10 @@ class _BudgetPage extends StatelessWidget {
         ),
         const SizedBox(height: 9),
         for (final item in budgets) ...[
-          _BudgetRow(item: item),
+          _BudgetRow(
+            item: item,
+            onDelete: () => onDeleteBudget(item),
+          ),
           const SizedBox(height: 10),
         ],
       ],
@@ -229,6 +234,8 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
                 DropdownMenuItem(value: 'Food', child: Text('Food')),
                 DropdownMenuItem(value: 'Transport', child: Text('Transport')),
                 DropdownMenuItem(value: 'Shopping', child: Text('Shopping')),
+                DropdownMenuItem(value: 'Housing', child: Text('Housing')),
+                DropdownMenuItem(value: 'Health', child: Text('Health')),
                 DropdownMenuItem(value: 'Bills', child: Text('Bills')),
                 DropdownMenuItem(
                   value: 'Entertainment',
@@ -288,9 +295,34 @@ class _AddBudgetDialogState extends State<_AddBudgetDialog> {
 }
 
 class _BudgetRow extends StatelessWidget {
-  const _BudgetRow({required this.item});
+  const _BudgetRow({required this.item, required this.onDelete});
 
   final _BudgetItem item;
+  final Future<void> Function() onDelete;
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete ${item.title} budget?'),
+        content: const Text(
+          'This removes the budget and its limit. Your transactions will stay.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: _red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete budget'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await onDelete();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,19 +335,19 @@ class _BudgetRow extends StatelessWidget {
         color: dark
             ? _panel
             : Color.alphaBlend(
-                item.color.withValues(alpha: 0.065),
+                item.color.withValues(alpha: 0.085),
                 Colors.white,
               ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: dark ? _line : item.color.withValues(alpha: 0.13),
+          color: dark ? _line : item.color.withValues(alpha: 0.17),
         ),
         boxShadow: [
           if (!dark)
             BoxShadow(
-              color: item.color.withValues(alpha: 0.045),
-              blurRadius: 13,
-              offset: const Offset(0, 4),
+              color: item.color.withValues(alpha: 0.07),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
         ],
       ),
@@ -349,8 +381,14 @@ class _BudgetRow extends StatelessWidget {
                 percent: (progress * 100).round(),
                 color: item.color,
               ),
-              const SizedBox(width: 5),
-              Icon(Icons.chevron_right_rounded, color: _muted, size: 22),
+              const SizedBox(width: 2),
+              IconButton(
+                tooltip: 'Delete ${item.title} budget',
+                onPressed: () => _confirmDelete(context),
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.delete_outline_rounded),
+                color: _red,
+              ),
             ],
           ),
           const SizedBox(height: 11),

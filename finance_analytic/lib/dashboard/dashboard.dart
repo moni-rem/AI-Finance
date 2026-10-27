@@ -3,6 +3,7 @@ part of '../app/app.dart';
 class _HomePage extends StatelessWidget {
   const _HomePage({
     required this.entries,
+    required this.budgets,
     required this.onAdd,
     required this.onOpenTransactions,
     required this.onOpenGoals,
@@ -10,10 +11,11 @@ class _HomePage extends StatelessWidget {
   });
 
   final List<_MoneyEntry> entries;
+  final List<_BudgetItem> budgets;
   final VoidCallback onAdd;
   final VoidCallback onOpenTransactions;
   final VoidCallback onOpenGoals;
-  final VoidCallback onOpenAssistant;
+  final ValueChanged<String> onOpenAssistant;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +54,29 @@ class _HomePage extends StatelessWidget {
     final todayIncome = todayEntries
         .where((entry) => entry.amount > 0)
         .fold<double>(0, (sum, entry) => sum + entry.amount);
+    final categoryTotals = <String, double>{};
+    for (final entry in entries.where((entry) => entry.amount < 0)) {
+      categoryTotals.update(
+        entry.category,
+        (amount) => amount + entry.amount.abs(),
+        ifAbsent: () => entry.amount.abs(),
+      );
+    }
+    final sortedCategories = categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topCategory = sortedCategories.isEmpty ? null : sortedCategories.first;
+    final categoryBudgets = topCategory == null
+        ? <_BudgetItem>[]
+        : budgets.where((item) => item.title == topCategory.key).toList();
+    final categoryBudget = categoryBudgets.isEmpty ? null : categoryBudgets.first;
+    final coachMessage = topCategory == null
+        ? 'Add a few expenses and I’ll help you spot a useful next step.'
+        : categoryBudget == null
+        ? 'Your largest recorded expense category is ${topCategory.key} at ${_money(topCategory.value)}.'
+        : '${topCategory.key}: ${_money(categoryBudget.spent)} of ${_money(categoryBudget.limit)} used.';
+    final coachPrompt = topCategory == null
+        ? 'Give me a simple money check-in and suggest one useful next step based on my recorded transactions.'
+        : 'Give me a simple plan for my ${topCategory.key} spending. I have recorded ${_money(topCategory.value)} in this category${categoryBudget == null ? '' : ' and my budget is ${_money(categoryBudget.limit)} with ${_money(categoryBudget.spent)} spent'}. Suggest one practical next step.';
 
     return _PageScroll(
       children: [
@@ -130,7 +155,7 @@ class _HomePage extends StatelessWidget {
         const SizedBox(height: 18),
         InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: onOpenAssistant,
+          onTap: () => onOpenAssistant(coachPrompt),
           child: Ink(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
             decoration: BoxDecoration(
@@ -147,14 +172,12 @@ class _HomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        todayEntries.isEmpty ? 'Your daily money check-in' : 'Today’s money check-in',
+                        'Your daily money coach',
                         style: TextStyle(color: _white, fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        todayEntries.isEmpty
-                            ? 'Ask AI for a simple plan for your money.'
-                            : '${todayEntries.length} transaction${todayEntries.length == 1 ? '' : 's'} recorded today. Ask AI what they mean.',
+                        coachMessage,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(color: _muted, fontSize: 11),
@@ -222,7 +245,7 @@ class _HomePage extends StatelessWidget {
               label: 'AI assistant',
               subtitle: 'Get insights',
               color: _orange,
-              onTap: onOpenAssistant,
+              onTap: () => onOpenAssistant('Give me a quick overview of my recorded income, expenses, and balance. Suggest one practical next step.'),
             ),
           ],
         ),

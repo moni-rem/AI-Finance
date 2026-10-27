@@ -85,33 +85,6 @@ class _BottomNavBar extends StatefulWidget {
 }
 
 class _BottomNavBarState extends State<_BottomNavBar> {
-  final _scrollController = ScrollController();
-  final _itemKeys = List.generate(_BottomNavBar._items.length, (_) => GlobalKey());
-
-  @override
-  void didUpdateWidget(covariant _BottomNavBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedIndex != widget.selectedIndex) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final itemContext = _itemKeys[widget.selectedIndex].currentContext;
-        if (itemContext != null && _scrollController.hasClients) {
-          Scrollable.ensureVisible(
-            itemContext,
-            duration: const Duration(milliseconds: 380),
-            curve: Curves.easeOutCubic,
-            alignment: 0.5,
-          );
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final barColor = widget.darkMode
@@ -144,23 +117,19 @@ class _BottomNavBarState extends State<_BottomNavBar> {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(5, 8, 5, 5),
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [
-                    for (var index = 0; index < _BottomNavBar._items.length; index++)
-                      _NavItem(
-                        key: _itemKeys[index],
+              padding: const EdgeInsets.fromLTRB(5, 7, 5, 5),
+              child: Row(
+                children: [
+                  for (var index = 0; index < _BottomNavBar._items.length; index++)
+                    Expanded(
+                      child: _NavItem(
                         item: _BottomNavBar._items[index],
                         selected: widget.selectedIndex == index,
                         darkMode: widget.darkMode,
                         onTap: () => widget.onSelected(index),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -199,47 +168,42 @@ class _NavItem extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
-            width: selected ? 150 : 64,
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 5),
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 1),
             decoration: BoxDecoration(
               color: selected ? _purple : Colors.transparent,
               borderRadius: BorderRadius.circular(30),
             ),
-            child: Row(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   selected ? item.$3 : item.$2,
-                  size: 23,
+                  size: 21,
                   color: selected
                       ? Colors.white
                       : (darkMode
                             ? const Color(0xFFB9AFB5)
                             : const Color(0xFF27232A)),
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  child: selected
-                      ? Row(
-                          children: [
-                            const SizedBox(width: 9),
-                            Text(
-                              item.$1,
-                              maxLines: 1,
-                              softWrap: false,
-                              overflow: TextOverflow.clip,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        )
-                      : const SizedBox.shrink(),
+                const SizedBox(height: 3),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    item.$1,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      color: selected
+                          ? Colors.white
+                          : (darkMode
+                                ? const Color(0xFFB9AFB5)
+                                : const Color(0xFF27232A)),
+                      fontSize: 9,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -432,15 +396,24 @@ class _Panel extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: dark ? _panel : Colors.white.withValues(alpha: 0.92),
+        color: dark ? _panel : const Color(0xFFFFFEFC),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: dark ? _line : const Color(0xFFDCE9EB)),
+        border: Border.all(
+          color: dark ? _line : const Color(0xFFE8E1E4),
+          width: 1,
+        ),
         boxShadow: [
           if (!dark)
             BoxShadow(
-              color: const Color(0xFF6F8790).withValues(alpha: 0.045),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+              color: const Color(0xFF493441).withValues(alpha: 0.07),
+              blurRadius: 20,
+              offset: const Offset(0, 7),
+            ),
+          if (dark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 5),
             ),
         ],
       ),
@@ -553,6 +526,8 @@ IconData _categoryIcon(String category) => switch (category) {
   'Food' => Icons.restaurant_rounded,
   'Transport' => Icons.directions_car_rounded,
   'Shopping' => Icons.shopping_bag_rounded,
+  'Housing' => Icons.home_rounded,
+  'Health' => Icons.health_and_safety_rounded,
   'Bills' => Icons.receipt_long_rounded,
   'Entertainment' => Icons.movie_rounded,
   _ => Icons.more_horiz_rounded,
@@ -562,6 +537,8 @@ Color _categoryColor(String category) => switch (category) {
   'Food' => _cyan,
   'Transport' => _yellow,
   'Shopping' => _orange,
+  'Housing' => const Color(0xFFED861D),
+  'Health' => const Color(0xFF21A366),
   'Bills' => _red,
   'Entertainment' => _purple,
   _ => _muted,

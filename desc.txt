@@ -1,0 +1,22 @@
+APP NAME
+Finora: Finance Tracker
+
+SHORT DESCRIPTION
+Track spending, manage budgets, and make progress toward savings goals.
+
+FULL DESCRIPTION
+Make everyday money tracking easier with Finora. Record your income and expenses, organize purchases, and see how your spending adds up.
+
+With Finora, you can:
+- Record income and expenses with categories, dates, and notes.
+- Search and review your transaction history.
+- Set category budgets and track spending against each limit.
+- Create savings goals and follow your progress.
+- View summaries of your balance, income, and expenses.
+- Ask the in-app money coach about your recorded finances. Online AI responses require an internet connection and an available service.
+- Explore as a guest, or sign in to save and sync your records.
+
+Finora uses US dollars (USD). Guest data is temporary and may be lost when you leave or reset the app. Signed-in records can be managed from your account. Finora is a personal tracking tool, not financial, investment, tax, or legal advice. Money coach responses may be inaccurate; check important figures and decisions.
+
+RELEASE NOTES — INITIAL RELEASE
+Meet Finora: Finance Tracker. Track income and expenses, organize transactions, set budgets and savings goals, and review your money summaries. Get started as a guest or sign in to save and sync your records.

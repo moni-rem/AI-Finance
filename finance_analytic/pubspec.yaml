@@ -1,5 +1,5 @@
 name: finance_analytic
-description: "A new Flutter project."
+description: "Finora helps you track spending, manage budgets, and follow savings goals."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -39,6 +39,8 @@ dependencies:
   firebase_core: ^5.1.0
   firebase_auth: ^7.0.1
   cloud_firestore: ^7.1.0
+  flutter_secure_storage: ^11.2.0
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +52,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -64,6 +67,26 @@ flutter:
 
   assets:
     - assets/images/login_finance_hero.png
+    - assets/images/finance_tracker_icon.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/finance_tracker_icon.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/images/finance_tracker_icon.png
+  web:
+    generate: true
+    image_path: assets/images/finance_tracker_icon.png
+    background_color: "#FFFFFF"
+    theme_color: "#E94775"
+  windows:
+    generate: true
+    image_path: assets/images/finance_tracker_icon.png
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: assets/images/finance_tracker_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

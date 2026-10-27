@@ -12,7 +12,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'displayName', 'email', 'createdAt', 'updatedAt'
         ]);
-      allow delete: if false;
+      allow delete: if ownsUserData(userId);
 
       match /transactions/{transactionId} {
         allow read, delete: if ownsUserData(userId);
@@ -21,7 +21,7 @@ service cloud.firestore {
             'name', 'category', 'date', 'amount', 'iconCode', 'colorValue', 'note'
           ])
           && request.resource.data.keys().hasOnly([
-            'name', 'category', 'date', 'amount', 'iconCode', 'colorValue', 'note'
+            'name', 'category', 'date', 'amount', 'iconCode', 'colorValue', 'note', 'createdAt'
           ])
           && request.resource.data.name is string
           && request.resource.data.category is string
@@ -29,7 +29,8 @@ service cloud.firestore {
           && request.resource.data.amount is number
           && request.resource.data.iconCode is int
           && request.resource.data.colorValue is int
-          && request.resource.data.note is string;
+          && request.resource.data.note is string
+          && request.resource.data.createdAt is timestamp;
       }
 
       match /budgets/{budgetId} {

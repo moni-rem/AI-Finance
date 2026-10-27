@@ -1,4 +1,4 @@
-package com.example.finance_analytic
+package com.financeTrack.finora
 
 import io.flutter.embedding.android.FlutterActivity
 

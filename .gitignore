@@ -1,0 +1,16 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+**/service-account*.json
+**/*service_account*.json
+**/credentials*.json
+**/secrets/**
+
+# Local machine and signing configuration
+**/local.properties
+**/key.properties
+**/*.jks
+**/*.keystore
+**/application-local.properties
+**/application-secret.properties
